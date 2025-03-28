@@ -1,0 +1,118 @@
+<!-- 
+  Código HTML para añadir un botón de exportación a Excel en Looker Studio
+  Se debe insertar como componente HTML personalizado
+-->
+<div style="text-align: center; font-family: 'Google Sans', Roboto, Arial, sans-serif;">
+  <button id="exportButton" style="
+    background-color: #1a73e8; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    padding: 8px 16px; 
+    font-size: 14px; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin: 0 auto;
+    box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  ">
+    <svg style="margin-right: 8px; width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+    </svg>
+    Exportar datos a Excel
+  </button>
+</div>
+
+<script>
+  // Función para formatear una fecha como DD/MM/YYYY
+  function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  
+  // Obtener fechas de los filtros de Looker Studio
+  function getDatesFromDataStudio() {
+    // Por defecto, usar el mes actual
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    // Objeto que almacenará las fechas
+    const dates = {
+      startDate: formatDate(firstDay),
+      endDate: formatDate(lastDay)
+    };
+    
+    try {
+      // Intentar obtener los filtros de Data Studio
+      // Esto solo funcionará si el componente HTML tiene acceso a los filtros
+      if (typeof window.dscc !== 'undefined' && window.dscc.state && window.dscc.state.filters) {
+        const filters = window.dscc.state.filters;
+        
+        // Buscar filtros de tipo BETWEEN para fechas
+        filters.forEach(filter => {
+          if (filter.dateRange && filter.dateRange.startDate && filter.dateRange.endDate) {
+            // Convertir fechas ISO a objetos Date
+            const startDate = new Date(filter.dateRange.startDate);
+            const endDate = new Date(filter.dateRange.endDate);
+            
+            // Formatear como DD/MM/YYYY
+            dates.startDate = formatDate(startDate);
+            dates.endDate = formatDate(endDate);
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error al obtener filtros de Data Studio:", error);
+    }
+    
+    return dates;
+  }
+  
+  // Configurar el botón de exportación
+  document.getElementById('exportButton').addEventListener('click', function() {
+    // Cambiar apariencia del botón para indicar que está procesando
+    const button = this;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite; margin-right: 8px;"></div> Procesando...';
+    button.style.opacity = '0.8';
+    button.style.cursor = 'wait';
+    
+    // Obtener fechas de los filtros
+    const dates = getDatesFromDataStudio();
+    
+    // URL de la aplicación web de Google Apps Script (reemplazar con tu URL después de publicar)
+    const scriptUrl = 'https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbzleVVCxsMlGHxdXE0gNg3fdTY6PtS_pja_aht4ACkckdsaaOBhsDrZ5OGhGjuJ1aGO/exec/exec';
+    
+    // Construir URL completa con parámetros
+    const exportUrl = `${scriptUrl}?startDate=${dates.startDate}&endDate=${dates.endDate}`;
+    
+    // Crear un iframe oculto para descargar el archivo
+    // Este enfoque evita problemas con los bloqueadores de pop-ups
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    // Restaurar el botón después de un tiempo
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.style.opacity = '1';
+      button.style.cursor = 'pointer';
+    }, 3000);
+    
+    // Iniciar la descarga
+    iframe.src = exportUrl;
+  });
+  
+  // Añadir estilos para la animación de carga
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
