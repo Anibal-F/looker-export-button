@@ -73,7 +73,7 @@
   
   // Configurar el botón de exportación
   document.getElementById('exportButton').addEventListener('click', function() {
-    // Cambiar apariencia del botón para indicar que está procesando
+    // Cambiar apariencia del botón
     const button = this;
     const originalText = button.innerHTML;
     button.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite; margin-right: 8px;"></div> Procesando...';
@@ -83,17 +83,14 @@
     // Obtener fechas de los filtros
     const dates = getDatesFromDataStudio();
     
-    // URL de la aplicación web de Google Apps Script (reemplazar con tu URL después de publicar)
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzRyXRGIE4roYDiiSSDaZAxn4DGGgOiqVqG_ljY6A5Nhj1GyHpIbVxiDojEGJG2MIzI/exec';
+    // URL del puente de Apps Script
+    const bridgeUrl = 'https://script.google.com/macros/s/AKfycbzKrzrLUgZa4J5VdU-PHBjQDlPy0imsXNbUycMLUVtAmW3ePREHSo1o_H9cSsXMT8DF/exec';
     
     // Construir URL completa con parámetros
-    const exportUrl = `${scriptUrl}?startDate=${dates.startDate}&endDate=${dates.endDate}`;
+    const exportUrl = `${bridgeUrl}?startDate=${dates.startDate}&endDate=${dates.endDate}`;
     
-    // Crear un iframe oculto para descargar el archivo
-    // Este enfoque evita problemas con los bloqueadores de pop-ups
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    // Abrir en nueva pestaña para iniciar la descarga
+    window.open(exportUrl, '_blank');
     
     // Restaurar el botón después de un tiempo
     setTimeout(() => {
@@ -101,9 +98,6 @@
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
     }, 3000);
-    
-    // Iniciar la descarga
-    iframe.src = exportUrl;
   });
   
   // Añadir estilos para la animación de carga
