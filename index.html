@@ -42,25 +42,45 @@
     };
     
     try {
-      // Intentar obtener los filtros de Data Studio
-      if (typeof window.dscc !== 'undefined' && window.dscc.state && window.dscc.state.filters) {
-        const filters = window.dscc.state.filters;
+      // Mostrar información de depuración completa sobre los filtros disponibles
+      if (typeof window.dscc !== 'undefined') {
+        console.log("Estado de dscc:", window.dscc);
         
-        // Buscar filtros de tipo BETWEEN para fechas
-        filters.forEach(filter => {
-          if (filter.dateRange && filter.dateRange.startDate && filter.dateRange.endDate) {
-            // Convertir fechas ISO a objetos Date
-            const startDate = new Date(filter.dateRange.startDate);
-            const endDate = new Date(filter.dateRange.endDate);
+        if (window.dscc.state) {
+          console.log("Estado completo:", window.dscc.state);
+        
+          if (window.dscc.state.filters) {
+            console.log("Filtros disponibles:", JSON.stringify(window.dscc.state.filters));
             
-            // Formatear como DD/MM/YYYY
-            dates.startDate = formatDate(startDate);
-            dates.endDate = formatDate(endDate);
+            // Examinar cada filtro para encontrar rangos de fecha
+            window.dscc.state.filters.forEach((filter, index) => {
+              console.log(`Examinando filtro ${index}:`, filter);
+              
+              // Buscar específicamente filtros de fecha
+              if (filter.dateRange) {
+                console.log(`Filtro de fecha encontrado:`, filter.dateRange);
+                
+                if (filter.dateRange.startDate && filter.dateRange.endDate) {
+                  // Convertir fechas ISO a objetos Date
+                  const startDate = new Date(filter.dateRange.startDate);
+                  const endDate = new Date(filter.dateRange.endDate);
+                  
+                  // Formatear como DD/MM/YYYY
+                  dates.startDate = formatDate(startDate);
+                  dates.endDate = formatDate(endDate);
+                  console.log(`Fechas del filtro actualizadas: ${dates.startDate} a ${dates.endDate}`);
+                }
+              }
+            });
+          } else {
+            console.log("No se encontraron filtros en dscc.state");
           }
-        });
+        }
+      } else {
+        console.log("El objeto dscc no está disponible");
       }
     } catch (error) {
-      console.error("Error al obtener filtros de Data Studio:", error);
+      console.error("Error al obtener filtros de Looker Studio:", error);
     }
     
     return dates;
@@ -88,23 +108,14 @@
       .then(data => {
         console.log("Respuesta del Apps Script:", data);
         
-        // Una vez actualizadas las fechas, iniciar la descarga directamente
-        const downloadUrl = `https://docs.google.com/spreadsheets/d/15r-TCp8NIuxckml5we7uo0V_eKlUnM_r9lyQefn5i3I/export?format=xlsx`;
-        
-        // Crear un enlace invisible y hacer clic en él para iniciar la descarga
-        const downloadLink = document.createElement('a');
-        downloadLink.href = downloadUrl;
-        downloadLink.download = `SantiICE_Datos_${dates.startDate}_a_${dates.endDate}.xlsx`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        
         // Restaurar el botón
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.style.opacity = '1';
-          button.style.cursor = 'pointer';
-        }, 2000);
+        button.innerHTML = originalText;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        
+        // Abrir la URL de descarga en una nueva ventana
+        const downloadUrl = `https://docs.google.com/spreadsheets/d/15r-TCp8NIuxckml5we7uo0V_eKlUnM_r9lyQefn5i3I/export?format=xlsx`;
+        window.open(downloadUrl, '_blank');
       })
       .catch(error => {
         console.error("Error:", error);
