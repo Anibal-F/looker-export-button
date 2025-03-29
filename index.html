@@ -69,7 +69,7 @@
   }
   
   // Configurar el botón de exportación
-  document.getElementById('exportButton').addEventListener('click', function() {
+   document.getElementById('exportButton').addEventListener('click', function() {
     // Cambiar apariencia del botón
     const button = this;
     const originalText = button.innerHTML;
@@ -79,22 +79,18 @@
     
     // Obtener fechas de los filtros
     const dates = getDatesFromDataStudio();
+    console.log("Fechas obtenidas:", dates);
     
     // URL del puente de Apps Script
-    const bridgeUrl = 'https://script.google.com/macros/s/AKfycbyvUIKE3wbcaj1Cj8uilc8I_AkdB_RaenZ3dPlSlCxxYaQ9ZCAadtjaGSMAFQ-_tGMW/exec';
+    const bridgeUrl = 'https://script.google.com/macros/s/AKfycbzKrzrLUgZa4J5VdU-PHBjQDlPy0imsXNbUycMLUVtAmW3ePREHSo1o_H9cSsXMT8DF/exec';
     
     // Construir URL completa con parámetros
     const exportUrl = `${bridgeUrl}?startDate=${dates.startDate}&endDate=${dates.endDate}`;
+    console.log("URL de exportación:", exportUrl);
     
-    // Abrir en nueva pestaña para iniciar la descarga
-    window.open(exportUrl, '_blank');
-    
-    // Restaurar el botón después de un tiempo
-    setTimeout(() => {
-      button.innerHTML = originalText;
-      button.style.opacity = '1';
-      button.style.cursor = 'pointer';
-    }, 3000);
+    // Abrir directamente en la misma ventana
+    // Esto permite que la redirección funcione correctamente
+    window.location.href = exportUrl;
   });
   
   // Añadir estilos para la animación de carga
