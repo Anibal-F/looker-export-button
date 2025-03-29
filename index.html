@@ -1,4 +1,3 @@
-
 <div style="text-align: center; font-family: 'Google Sans', Roboto, Arial, sans-serif;">
   <button id="exportButton" style="
     background-color: #1a73e8; 
@@ -44,7 +43,6 @@
     
     try {
       // Intentar obtener los filtros de Data Studio
-      // Esto solo funcionará si el componente HTML tiene acceso a los filtros
       if (typeof window.dscc !== 'undefined' && window.dscc.state && window.dscc.state.filters) {
         const filters = window.dscc.state.filters;
         
@@ -69,8 +67,8 @@
   }
   
   // Configurar el botón de exportación
-   document.getElementById('exportButton').addEventListener('click', function() {
-    // Cambiar apariencia del botón
+  document.getElementById('exportButton').addEventListener('click', function() {
+    // Cambiar apariencia del botón para indicar que está procesando
     const button = this;
     const originalText = button.innerHTML;
     button.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite; margin-right: 8px;"></div> Procesando...';
@@ -82,15 +80,41 @@
     console.log("Fechas obtenidas:", dates);
     
     // URL del puente de Apps Script
-    const bridgeUrl = 'https://script.google.com/macros/s/AKfycbxuonxyqv-xuAP7nJDp_gu1VtqLV6txxrO59xsWw2TwhZpRsMFQmRn36K1E99EhfH2O/exec';
+    const bridgeUrl = 'https://script.google.com/macros/s/AKfycbw4e7a5bQFXTf2pwoozvUpXUslCnlYW9fBOZWBHLszg9b7sLsqrwBdiwHYXgY6Jl972/exec';
     
-    // Construir URL completa con parámetros
-    const exportUrl = `${bridgeUrl}?startDate=${dates.startDate}&endDate=${dates.endDate}`;
-    console.log("URL de exportación:", exportUrl);
-    
-    // Abrir directamente en la misma ventana
-    // Esto permite que la redirección funcione correctamente
-    window.location.href = exportUrl;
+    // Primero actualizar las fechas mediante el Apps Script
+    fetch(`${bridgeUrl}?startDate=${dates.startDate}&endDate=${dates.endDate}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("Respuesta del Apps Script:", data);
+        
+        // Una vez actualizadas las fechas, iniciar la descarga directamente
+        const downloadUrl = `https://docs.google.com/spreadsheets/d/15r-TCp8NIuxckml5we7uo0V_eKlUnM_r9lyQefn5i3I/export?format=xlsx`;
+        
+        // Crear un enlace invisible y hacer clic en él para iniciar la descarga
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = `SantiICE_Datos_${dates.startDate}_a_${dates.endDate}.xlsx`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // Restaurar el botón
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.style.opacity = '1';
+          button.style.cursor = 'pointer';
+        }, 2000);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("Ocurrió un error al procesar la solicitud. Por favor, intenta de nuevo.");
+        
+        // Restaurar el botón en caso de error
+        button.innerHTML = originalText;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+      });
   });
   
   // Añadir estilos para la animación de carga
